@@ -1,11 +1,11 @@
-package Vista;
+package UI;
 
-import Clases.AbrirArchivoDeTexto;
-import Clases.AbrirExcel;
-import Clases.ExportarExcel;
-import Clases.FormatoDebitosAutomaticos;
-import Clases.FormatoHomebanking;
-import Clases.FormatoLinksDePago;
+import Clases.FileReaders.AbrirArchivoDeTexto;
+import Clases.FileReaders.AbrirExcel;
+import Clases.FileWriters.ExportarExcel;
+import Clases.Formatter.FormatoDebitosAutomaticos;
+import Clases.Formatter.FormatoHomebanking;
+import Clases.Formatter.FormatoMacroClicks;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Font;
@@ -38,7 +38,7 @@ import javax.swing.table.DefaultTableModel;
 nl.loragro@gmail.com
  */
 // Formulario para el manejo del normalizador
-public final class VistaExcel extends javax.swing.JFrame {
+public final class Home extends javax.swing.JFrame {
 
     private FondoPanel fondo = new FondoPanel();
     private AbrirExcel abrirEx;
@@ -46,7 +46,7 @@ public final class VistaExcel extends javax.swing.JFrame {
     private String file;
     private ExportarExcel e;
 
-    public VistaExcel() {
+    public Home() {
         this.setContentPane(this.fondo);
         initComponents();
         jBtnExportar.setEnabled(false);
@@ -555,7 +555,7 @@ public final class VistaExcel extends javax.swing.JFrame {
         JbtnImportarPMC.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
         JbtnImportarPMC.setForeground(new java.awt.Color(0, 0, 0));
         JbtnImportarPMC.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Imagenes/importar.png"))); // NOI18N
-        JbtnImportarPMC.setText("Importar Excel");
+        JbtnImportarPMC.setText("Importar TXT");
         JbtnImportarPMC.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255), 3), javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED)));
         JbtnImportarPMC.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         JbtnImportarPMC.setFocusPainted(false);
@@ -862,7 +862,7 @@ public final class VistaExcel extends javax.swing.JFrame {
     }//GEN-LAST:event_jBtnNormalizadorLinksMouseExited
 
     private void jBtnNormalizadorLinksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnNormalizadorLinksActionPerformed
-        FormatoLinksDePago nom = new FormatoLinksDePago();
+        FormatoMacroClicks nom = new FormatoMacroClicks();
         nom.normalizar(tablaLinks);
 
         jBtnNormalizadorLinks.setEnabled(false);
@@ -906,7 +906,7 @@ public final class VistaExcel extends javax.swing.JFrame {
         try {
             importarTxt(tablaPMC);
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(VistaExcel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
         }
         jBtnNormalizadorPMC.setEnabled(true);
         jBtnNormalizadorPMC.setBorderPainted(true);
@@ -964,7 +964,7 @@ public final class VistaExcel extends javax.swing.JFrame {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new VistaExcel().setVisible(true);
+                new Home().setVisible(true);
             }
         });
     }

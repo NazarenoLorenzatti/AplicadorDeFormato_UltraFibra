@@ -1,4 +1,4 @@
-package Clases;
+package Clases.Formatter;
 
 import static java.lang.String.valueOf;
 import javax.swing.JTable;

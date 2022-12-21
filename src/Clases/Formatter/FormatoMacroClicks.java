@@ -1,4 +1,4 @@
-package Clases;
+package Clases.Formatter;
 
 import static java.lang.String.valueOf;
 import javax.swing.JTable;
@@ -11,9 +11,9 @@ nl.loragro@gmail.com
 
 // Clase encargada de convertir la informacion de las tablas de cobranza enviados por Macroclicks (links y boton de pagos)
 // a una Jtable formateandola para que pueda imputarse de forma masiva. Luego el Jtable se exporta a un excel.
-public class FormatoLinksDePago {
+public class FormatoMacroClicks {
 
-    public FormatoLinksDePago() {
+    public FormatoMacroClicks() {
 
     }
 
@@ -57,19 +57,20 @@ public class FormatoLinksDePago {
                 }
 
                 if (nombreColumna.equals("Informacion")) {
-                    String valorCelda = (String) tabla.getValueAt(i, j);
+                    String valorCelda = (String) tabla.getValueAt(i, j);                   
                     String Id = "";
+                    int index = valorCelda.indexOf("Clave2");
 
                     if (valorCelda != null) {
 
                         char[] charArray = valorCelda.toCharArray();
                         boolean flag = true;
-                        int cont = 81;
+                        int cont = index + 9;
 
                         while (flag) {
                             char caracter = charArray[cont];
 
-                            if (caracter != '"') {
+                            if (caracter != ' ' && caracter !='-') {
                                 Id = Id + String.valueOf(caracter);
                                 cont++;
                             } else {
@@ -77,8 +78,8 @@ public class FormatoLinksDePago {
                             }
 
                         }
+                        tabla.setValueAt(Id, i, j + 1);
                         tabla.setValueAt(Id, i, j + 2);
-                        tabla.setValueAt(Id, i, j + 3);
 
                     }
                 }
@@ -89,11 +90,15 @@ public class FormatoLinksDePago {
                     int y = valorCelda.length();
                     String id = valorCelda.substring(6, y);
 
+                    tabla.setValueAt(id, i, j + 1);
                     tabla.setValueAt(id, i, j + 2);
-                    tabla.setValueAt(id, i, j + 3);
 
                 }
             }
+        }
+        
+        for (int i = 0; i < tabla.getRowCount(); i++){
+            tabla.setValueAt("MacroClick", i , 2);
         }
     }
 }

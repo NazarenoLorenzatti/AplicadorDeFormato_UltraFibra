@@ -1,4 +1,4 @@
-package Clases;
+package Clases.FileWriters;
 
 import java.io.DataOutputStream;
 import java.io.File;

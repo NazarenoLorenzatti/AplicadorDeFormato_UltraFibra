@@ -1,4 +1,4 @@
-package Clases;
+package Clases.FileReaders;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -86,7 +86,7 @@ public class AbrirArchivoDeTexto {
                 for (int i = 20; i < arregloFila.length; i++) {
                     String posicion = valueOf(arregloFila[i]);
 
-                    if (!posicion.equals(" ")) {
+                    if (!posicion.equals("-")) {
                         Id += posicion;
                     } else {
                         fila[3] = Id;
