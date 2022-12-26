@@ -44,7 +44,6 @@ public class LectorXLS_PMC {
             this.hoja = wb.getSheetAt(0);
             this.formatoDeDatos = new DataFormatter();
             this.df = new DecimalFormat("#.00");
-            
 
         } catch (FileNotFoundException ex) {
             Logger.getLogger(LectorXLS_PMC.class.getName()).log(Level.SEVERE, null, ex);
@@ -115,16 +114,16 @@ public class LectorXLS_PMC {
         tabla.setModel(dt);
     }
 
-    public void leerTabla(JTable tabla, String path) throws ParseException {        
-        
+    public void leerTabla(JTable tabla, String path) throws ParseException {
+
         String IdOk = null, fechaPrimerVto = null, fechaSegundoVto = null, montoPrimerVto = null, montoSegundoVto = null,
                 numeroFactura = null, dniCliente = null, fechaTercerVto = null;
         int cont = 1;
-        
+
         this.escritor = new EscritorTxt(path);
 
         String fechaPrimerFila = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDateTime.now());
-        
+
         String primerFila = "0400SBHN" + fechaPrimerFila + cerosDerecha("", 264);
         this.escritor.escribir(primerFila, true);
 
@@ -162,20 +161,22 @@ public class LectorXLS_PMC {
 
                 // Establecemos las fechas de vencimiento               
                 if (i == 2) {
-
+                    
+                    LocalDate fecha1 = LocalDate.now();
+                    
                     LocalDate fecha = LocalDate.parse(valorCelda);
 
                     int mes = fecha.getMonthValue();
 
                     asignarMes(mes);
 
-                    fechaPrimerVto = fecha.toString();
+                    fechaPrimerVto = fecha1.plusDays(2).toString();
                     fechaPrimerVto = fechaPrimerVto.replace("-", "");
 
-                    fechaSegundoVto = fecha.plusDays(15).toString();
+                    fechaSegundoVto = fecha1.plusDays(5).toString();
                     fechaSegundoVto = fechaSegundoVto.replace("-", "");
 
-                    fechaTercerVto = fecha.plusDays(75).toString();
+                    fechaTercerVto = fecha1.plusDays(30).toString();
                     fechaTercerVto = fechaTercerVto.replace("-", "");
                 }
 
@@ -289,25 +290,25 @@ public class LectorXLS_PMC {
             }
 
             String fila = dniCliente + IdOk + "0" + fechaPrimerVto + montoPrimerVto + fechaSegundoVto + montoSegundoVto + fechaTercerVto + montoSegundoVto
-                    + "000000000000000000" + dniCliente.substring(1) +" " + asignarEspacios(mensajeTicket, 40) + asignarEspacios(mensajePantalla, 15)
+                    + "000000000000000000" + dniCliente.substring(1) + " " + asignarEspacios(mensajeTicket, 40) + asignarEspacios(mensajePantalla, 15)
                     + asignarEspacios(numeroFactura, 60) + cerosDerecha("", 29);
+
 
             this.escritor.escribir(fila, true);
 
         }
-        
+
         String monto = String.valueOf(df.format(montoTotalPrimerVto));
-        
-        String ultimaFila = "9400SBHN" + fechaPrimerFila + cerosIzquierda(valueOf(this.contadorFilas), 7)+ "0000000" 
+
+        String ultimaFila = "9400SBHN" + fechaPrimerFila + cerosIzquierda(valueOf(this.contadorFilas), 7) + "0000000"
                 + cerosIzquierda(String.valueOf(df.format(montoTotalPrimerVto)).replace(",", ""), 16)
                 + cerosDerecha("", 234);
-        
+
         this.escritor.escribir(ultimaFila, true);
 
         JOptionPane.showMessageDialog(null, "ARCHIVOS GENERADOS");
         escritor.abrirarchivo();
     }
-    
 
     public String asignarEspacios(String fila, int pos) {
         String filaRet = null;
@@ -325,7 +326,6 @@ public class LectorXLS_PMC {
         filaRet = valueOf(arrayOutput);
         return filaRet;
     }
-    
 
     public String cerosDerecha(String fila, int pos) {
         String filaRet = null;
@@ -343,7 +343,6 @@ public class LectorXLS_PMC {
         filaRet = valueOf(arrayOutput);
         return filaRet;
     }
-    
 
     public String cerosIzquierda(String fila, int pos) {
         String filaRet = null;
@@ -363,7 +362,6 @@ public class LectorXLS_PMC {
         filaRet = valueOf(filaArray);
         return filaRet;
     }
-    
 
     public void asignarMes(int mes) {
         switch (mes) {

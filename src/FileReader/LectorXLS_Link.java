@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import static java.lang.String.valueOf;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
@@ -125,7 +126,7 @@ public class LectorXLS_Link {
 
         String primerFila = "HRFACTURACIONGK0" + fechaPrimerFila + "00001";
         primerFila = primerFila + asignarEspacios(primerFila);
-        
+
         this.escritor.escribir(primerFila, true);
 
         for (int j = 0; j < tabla.getRowCount(); j++) {
@@ -155,7 +156,7 @@ public class LectorXLS_Link {
                     if (valorCelda.contains("SUB")) {
                         concepto = "001"; // Facturas de abono
 
-                    } else if (valorCelda.contains("SO") && tabla.getValueAt(j, i + 4).equals("3500")) {
+                    } else if (valorCelda.contains("SO") && tabla.getValueAt(j, i + 4).equals("3500") || tabla.getValueAt(j, i + 4).equals("4500")) {
                         concepto = "003"; // Facturas Instalacion
 
                     } else if (valorCelda.contains("SO")) {
@@ -190,9 +191,13 @@ public class LectorXLS_Link {
 
                 // Establezco las fechas de vencimiento
                 if (i == 3) {
-                    fechaPrimerVto = valorCelda.replace("-", "");
-                    fechaPrimerVto = fechaPrimerVto.substring(2, 8);
-                    fechaSegundoVto = fechaPrimerVto.substring(0, 4) + "25";
+
+                    LocalDate fecha = LocalDate.parse(valorCelda);
+
+                    fechaPrimerVto = DateTimeFormatter.ofPattern("yyMMdd").format(fecha);
+
+                    fechaSegundoVto = DateTimeFormatter.ofPattern("yyMMdd").format(fecha.plusDays(15));
+
                 }
 
                 //Establezco los montos del primer vencimiento
@@ -332,7 +337,7 @@ public class LectorXLS_Link {
                 + cerosIzquierda(String.valueOf(df.format(montoTotalSegundoVto)).replace(",", ""), 18) + "000000000000000000";
 
         ultimaFila = ultimaFila + asignarEspacios(ultimaFila);
-        
+
         this.escritor.escribir(ultimaFila, true);
 
         String ultimaFecha = (String) tabla.getValueAt(0, 3);
