@@ -1,14 +1,14 @@
 package FileReader;
 
 import FileWriter.EscritorTxt;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+//import java.io.FileInputStream;
+//import java.io.FileNotFoundException;
+//import java.io.IOException;
 import static java.lang.String.valueOf;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+//import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -118,8 +118,11 @@ public class LectorXLS_Link {
         this.escritor = new EscritorTxt(path + ".txt");
 
         String IdOk = null, concepto = null, fechaPrimerVto = null, fechaSegundoVto = null, montoPrimerVto = null, montoSegundoVto = null,
-                numeroFactura = null, documentoOrigen = null, conceptoAnterior = null, idDeuda = null;
+                numeroFactura = null, documentoOrigen = null, conceptoAnterior = null, idDeuda = null, ultimaFecha = null;
         int cont = 1;
+        
+        String fechaRespaldo = (String) tabla.getValueAt(1, 3);
+        LocalDate ultFecVto = LocalDate.parse(fechaRespaldo);
 
         String fechaStr = DateTimeFormatter.ofPattern("MMyy").format(LocalDateTime.now());
         String fechaPrimerFila = DateTimeFormatter.ofPattern("yyMMdd").format(LocalDateTime.now());
@@ -192,11 +195,17 @@ public class LectorXLS_Link {
                 // Establezco las fechas de vencimiento
                 if (i == 3) {
 
-                    LocalDate fecha = LocalDate.parse(valorCelda);
+                    LocalDate fecha = LocalDate.parse(valorCelda);                    
 
                     fechaPrimerVto = DateTimeFormatter.ofPattern("yyMMdd").format(fecha);
 
                     fechaSegundoVto = DateTimeFormatter.ofPattern("yyMMdd").format(fecha.plusDays(15));
+                    
+                    if (fecha.plusDays(15).isAfter(ultFecVto)){
+                        ultFecVto = fecha.plusDays(15);
+                    }
+                    
+                    ultimaFecha = DateTimeFormatter.ofPattern("yyyyMMdd").format(ultFecVto);
 
                 }
 
@@ -340,8 +349,6 @@ public class LectorXLS_Link {
 
         this.escritor.escribir(ultimaFila, true);
 
-        String ultimaFecha = (String) tabla.getValueAt(0, 3);
-        ultimaFecha = ultimaFecha.replace("-", "");
         archivoDeControl(path, this.contadorFilas, this.montoTotalPrimerVto, this.montoTotalSegundoVto, ultimaFecha);
 
         JOptionPane.showMessageDialog(null, "ARCHIVOS GENERADOS");

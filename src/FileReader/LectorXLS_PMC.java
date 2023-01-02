@@ -8,12 +8,10 @@ import java.io.IOException;
 import static java.lang.String.valueOf;
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import org.apache.poi.EncryptedDocumentException;
@@ -119,6 +117,8 @@ public class LectorXLS_PMC {
         String IdOk = null, fechaPrimerVto = null, fechaSegundoVto = null, montoPrimerVto = null, montoSegundoVto = null,
                 numeroFactura = null, dniCliente = null, fechaTercerVto = null;
         int cont = 1;
+        
+        double montoDbl1erVto = 0, montoDbl2doVto = 0;
 
         this.escritor = new EscritorTxt(path);
 
@@ -159,31 +159,10 @@ public class LectorXLS_PMC {
                     dniCliente = "5" + asignarEspacios(valorCelda, 19);
                 }
 
-                // Establecemos las fechas de vencimiento               
-                if (i == 2) {
-                    
-                    LocalDate fecha1 = LocalDate.now();
-                    
-                    LocalDate fecha = LocalDate.parse(valorCelda);
-
-                    int mes = fecha.getMonthValue();
-
-                    asignarMes(mes);
-
-                    fechaPrimerVto = fecha1.plusDays(2).toString();
-                    fechaPrimerVto = fechaPrimerVto.replace("-", "");
-
-                    fechaSegundoVto = fecha1.plusDays(5).toString();
-                    fechaSegundoVto = fechaSegundoVto.replace("-", "");
-
-                    fechaTercerVto = fecha1.plusDays(30).toString();
-                    fechaTercerVto = fechaTercerVto.replace("-", "");
-                }
-
                 //Establezco los montos del primer vencimiento
-                if (i == 3) {
+                if (i == 2) {
 
-                    String totalAdeudado = (String) tabla.getValueAt(j, i + 3);
+                    String totalAdeudado = (String) tabla.getValueAt(j, i + 4);
                     totalAdeudado = totalAdeudado.replace(",", ".");
 
                     String totalConRecargo = (String) tabla.getValueAt(j, i + 1);
@@ -193,7 +172,7 @@ public class LectorXLS_PMC {
 
                     if (totalSinRecargo.equals(totalAdeudado)) {
 
-                        this.montoTotalPrimerVto += Double.parseDouble(totalSinRecargo);
+                        montoDbl1erVto = Double.parseDouble(totalSinRecargo);
 
                         montoPrimerVto = totalSinRecargo.replace(".", ""); // si se debe el total de la factura y el adeudado es igual 
                         char[] montoArray = montoPrimerVto.toCharArray();
@@ -209,7 +188,7 @@ public class LectorXLS_PMC {
                     } else {
 
                         if (!totalAdeudado.equals(totalConRecargo)) {
-                            this.montoTotalPrimerVto += Double.parseDouble(totalAdeudado);
+                            montoDbl1erVto = Double.parseDouble(totalAdeudado);
 
                             montoPrimerVto = totalAdeudado;
                             montoPrimerVto = montoPrimerVto.replace(".", ""); // Si la factura esta abierta pero no se debe completa
@@ -223,7 +202,7 @@ public class LectorXLS_PMC {
                             }
                             montoPrimerVto = valueOf(monto);
                         } else {
-                            this.montoTotalPrimerVto += Double.parseDouble(totalSinRecargo);
+                            montoDbl1erVto = Double.parseDouble(totalSinRecargo);
                             montoPrimerVto = totalSinRecargo.replace(".", ""); // si se debe el total de la factura y el adeudado es igual 
                             char[] montoArray = montoPrimerVto.toCharArray();
                             char monto[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'};
@@ -239,16 +218,17 @@ public class LectorXLS_PMC {
                 }
 
                 // Establezco los montos del segundo vencimiento
-                if (i == 4) {
+                if (i == 3) {
 
                     if (!valorCelda.equals("0,00")) {
-                        String totalAdeudado = (String) tabla.getValueAt(j, i + 2);
+                        String totalAdeudado = (String) tabla.getValueAt(j, i + 3);
                         totalAdeudado = totalAdeudado.replace(",", ".");
                         valorCelda = valorCelda.replace(",", ".");
 
                         if (valorCelda.equals(totalAdeudado)) {
                             valorCelda = valorCelda.replace(",", ".");
-
+                            montoDbl2doVto = Double.parseDouble(valorCelda);
+                            
                             montoSegundoVto = valorCelda.replace(".", ""); // Si es distinto de 0 el primer vencimiento tiene recargo
                             char[] montoArray = montoSegundoVto.toCharArray();
                             char monto[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'};
@@ -262,6 +242,7 @@ public class LectorXLS_PMC {
                         } else {
 
                             montoSegundoVto = valorCelda;
+                            montoDbl2doVto = Double.parseDouble(valorCelda);
                             montoSegundoVto = montoSegundoVto.replace(".", ""); // Si la factura esta abierta pero no se debe completa
                             char[] montoArray = montoSegundoVto.toCharArray();
                             char monto[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'};
@@ -276,8 +257,38 @@ public class LectorXLS_PMC {
                         }
 
                     } else {
+                        montoDbl2doVto = montoDbl1erVto;
                         montoSegundoVto = montoPrimerVto; // si es igual a 0 el primer vencimiento no tiene re cargo y es igual al monto del primer vencimiento
                     }
+
+                }
+
+                // Establecemos las fechas de vencimiento               
+                if (i == 4) {
+
+                    LocalDate fechaDeFactura = LocalDate.parse((String) tabla.getValueAt(j, 7));
+                    int mes = fechaDeFactura.getMonthValue();
+                    int dia = fechaDeFactura.getDayOfMonth();
+                    asignarMes(mes, dia, (String) tabla.getValueAt(j, 2));
+
+                    LocalDate fechaHoy = LocalDate.now();
+                    LocalDate fechaVto = LocalDate.parse(valorCelda);
+
+                    if (fechaVto.isBefore(fechaHoy)) {
+                        montoPrimerVto = montoSegundoVto;
+                        montoDbl1erVto = montoDbl2doVto;
+                        fechaPrimerVto = fechaHoy.plusDays(2).toString();
+                        fechaSegundoVto = fechaHoy.plusDays(5).toString();
+                        fechaTercerVto = fechaHoy.plusDays(25).toString();
+                    } else {
+                        fechaPrimerVto = fechaVto.toString();
+                        fechaSegundoVto = fechaVto.plusDays(10).toString();
+                        fechaTercerVto = fechaVto.plusDays(30).toString();
+                    }
+
+                    fechaPrimerVto = fechaPrimerVto.replace("-", "");
+                    fechaSegundoVto = fechaSegundoVto.replace("-", "");
+                    fechaTercerVto = fechaTercerVto.replace("-", "");
 
                 }
 
@@ -288,11 +299,12 @@ public class LectorXLS_PMC {
                 }
 
             }
+            
+            this.montoTotalPrimerVto += montoDbl1erVto;
 
             String fila = dniCliente + IdOk + "0" + fechaPrimerVto + montoPrimerVto + fechaSegundoVto + montoSegundoVto + fechaTercerVto + montoSegundoVto
-                    + "000000000000000000" + dniCliente.substring(1) + " " + asignarEspacios(mensajeTicket, 40) + asignarEspacios(mensajePantalla, 15)
+                    + "0000000000000000000" + dniCliente.substring(1) + asignarEspacios(mensajeTicket, 40) + asignarEspacios(mensajePantalla, 15)
                     + asignarEspacios(numeroFactura, 60) + cerosDerecha("", 29);
-
 
             this.escritor.escribir(fila, true);
 
@@ -363,93 +375,204 @@ public class LectorXLS_PMC {
         return filaRet;
     }
 
-    public void asignarMes(int mes) {
+    public void asignarMes(int mes, int dia, String monto) {
+        if (monto.equals("3500,00") || monto.equals("4500,00")) {
+
+        }
+
         switch (mes) {
             case 1:
-                mensajeTicket = "FAC ENERO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC ENERO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL ENERO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC ENE";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 2:
-                mensajeTicket = "FAC FEBRERO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC FEBRERO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL FEBRERO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC FEB";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 3:
-                mensajeTicket = "FAC MARZO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC MARZO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL MARZO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC MAR";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 4:
-                mensajeTicket = "FAC ABRIL ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC ABRIL ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL ABRIL";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC ABR";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 5:
-                mensajeTicket = "FAC MAYO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC MAYO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL MAYO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC MAY";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 6:
-                mensajeTicket = "FAC JUNIO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC JUNIO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL JUNIO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC JUN";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 7:
-                mensajeTicket = "FAC JULIO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC JULIO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL JULIO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC JUL";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 8:
-                mensajeTicket = "FAC AGOSTO ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC AGOSTO ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL AGOSTO";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC AGO";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 9:
-                mensajeTicket = "FAC SEPTIEMBRE ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC SEPTIEMBRE ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL SEPTIEMBRE";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC SEP";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 10:
-                mensajeTicket = "FAC OCTUBRE ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC OCTUBRE ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL OCTUBRE";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC OCT";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 11:
-                mensajeTicket = "FAC NOVIEMBRE ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC NOBVIEMBRE ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL NOVIEMBRE";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC NOV";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
             case 12:
-                mensajeTicket = "FAC DICIEMBRE ULTRAFIBRA";
-                mensajeTicket = asignarEspacios(mensajeTicket, 40);
-
+                if (monto.equals("3500,00") || monto.equals("4500,00")) {
+                    mensajeTicket = "FAC INSTALACION";
+                    mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                } else {
+                    if (dia == 1) {
+                        mensajeTicket = "FAC DICIEMBRE ULTRAFIBRA";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    } else {
+                        mensajeTicket = "FAC PROPORCIONAL DICIEMBRE";
+                        mensajeTicket = asignarEspacios(mensajeTicket, 40);
+                    }
+                }
                 mensajePantalla = "FAC DIC";
                 mensajePantalla = asignarEspacios(mensajePantalla, 15);
                 break;
         }
     }
-
 }
